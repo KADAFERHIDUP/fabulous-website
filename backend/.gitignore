@@ -23,6 +23,7 @@
 /public/img/
 /public/data/
 /public/vendor/
+/public/models/
 
 # Foto mobil yang diupload lewat panel admin
 /public/uploads/*

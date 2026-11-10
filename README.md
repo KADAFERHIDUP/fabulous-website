@@ -20,19 +20,24 @@ Landing page produk earbuds nirkabel **Fabulous**, dibuat oleh **Ahmad Umraithi*
 
 ### Alur halaman
 
-1. **Hero**: judul besar, case 3D berputar pelan di tengah.
+1. **Hero**: judul besar, case 3D dengan tutup terbuka berputar pelan di tengah.
 2. **Fitur** (bagian lengket selama scroll): objek di kiri, garis progres di tengah, tiga kartu di kanan. Setiap kartu yang aktif mengubah objek 3D:
    - *Desain ramping dan elegan*: case tertutup, sedikit miring.
    - *Inti akustik super kuat*: tutup terbuka, earbuds terangkat, case menjadi tembus pandang (mode x-ray) dan driver terlihat.
    - *Baterai seharian*: lampu hijau berdenyut dan cahaya hijau di bawah case.
-3. **Warna**: objek pindah ke kanan; 8 pilihan warna mengganti warna case 3D secara halus.
+3. **Warna**: objek pindah ke kanan. Ada dua bentuk case (**Pods**: case kotak, earbuds berdiri; **Mini**: case kapsul) dan 8 warna yang mengganti warna case 3D secara halus. Model yang dipilih ikut tercatat di pesanan dan pesan WhatsApp.
 4. **Spesifikasi**: foto HD dari Unsplash dan 4 kartu spesifikasi.
 5. **Beli**: 8 warna dengan gambar HD tanpa background yang dirender langsung dari model 3D, tombol pesan lewat WhatsApp.
 
 ### Teknologi
 
 - HTML, CSS, JavaScript tanpa framework.
-- **three.js r187** (disimpan di `vendor/`, tidak perlu internet). Case dan earbuds dibuat dari kode di `js/pods3d.js`, tanpa file model.
+- **three.js r187** (disimpan di `vendor/`, tidak perlu internet).
+- Objek 3D memakai dua model GLB di `models/` (dibaca oleh `js/glb.js`). `js/pods3d.js` memisahkan tutup dari badan case, memasang engsel supaya tutup bisa membuka dan menutup, lalu mengganti warna case sesuai pilihan. Earbuds tetap hitam.
+- Model 3D (lisensi CC BY 4.0, kreditnya juga ada di footer website):
+  - [Anker Soundcore Liberty Air 2](https://sketchfab.com/3d-models/anker-soundcore-liberty-air-2-ab9b011d2718477ab0e1405143a2fc1c) oleh *standso* (bentuk **Pods**)
+  - [Earphones](https://sketchfab.com/3d-models/earphones-c1651db2880145e68b5c8abf04fcddc8) oleh *nurhadimli* (bentuk **Mini**)
+- Ukuran kedua model sekitar 9 MB; model Mini baru diunduh saat dipilih.
 - Kalau browser tidak mendukung WebGL2, objek 3D diganti foto produk asli.
 - Responsif sampai HP, bisa dipakai dengan keyboard (pilihan warna bisa dengan tombol panah), dan menghormati pengaturan *reduced motion*.
 

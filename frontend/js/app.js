@@ -19,7 +19,7 @@ let COLORS = [
 ].map(c => ({ ...c, price: SHOP_PRICE, stock: null }));
 const rp = n => 'Rp ' + n.toLocaleString('id-ID');
 const img = c => `img/case-${c.id >= 1 && c.id <= 8 ? c.id : 2}.png`;
-const wa = c => `https://wa.me/${SHOP.whatsapp}?text=${encodeURIComponent(`Halo Fabulous, saya mau pesan Fabulous Pods warna ${c.name} (${rp(c.price)}). Apakah stoknya ada?`)}`;
+const wa = c => `https://wa.me/${SHOP.whatsapp}?text=${encodeURIComponent(`Halo Fabulous, saya mau pesan ${MODELS[model]} warna ${c.name} (${rp(c.price)}). Apakah stoknya ada?`)}`;
 const stills = new Map(); // render HD per warna (hex → data URL)
 const picture = c => stills.get(c.hex) || img(c);
 function makeStills() {
@@ -30,13 +30,15 @@ function makeStills() {
 const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let pods = null;
+let model = 'pods';
+const MODELS = { pods: 'Fabulous Pods', mini: 'Fabulous Mini' };
 let color = COLORS[0];
 
 // ---------------------------------------------------------------- 3D
 async function start3D() {
   try {
     const { createPods } = await import('./pods3d.js');
-    pods = createPods($('#stage'), { color: color.hex });
+    pods = await createPods($('#stage'), { color: color.hex });
     document.body.classList.add('has-3d');
     // ganti foto kecil di katalog dengan render HD dari model 3D (satu per warna, latar transparan)
     setTimeout(makeStills, 600);
@@ -55,9 +57,9 @@ function place(spot, widthPx) {
   return { x: (r.left + r.width / 2 - innerWidth / 2) / innerWidth, y: -(r.top + r.height / 2 - innerHeight / 2) / innerHeight, s };
 }
 const STEP_POSE = [
-  { ry: 0.55, rx: 0.14, lid: 0, lift: 0, xray: 0, glow: 0 },      // desain: tertutup, sedikit miring
-  { ry: -0.3, rx: 0.32, lid: 1, lift: 1, xray: 1, glow: 0 },      // akustik: tutup terbuka, earbuds naik, tembus pandang
-  { ry: 0.25, rx: 0.1, lid: 0.18, lift: 0, xray: 0, glow: 1 },    // baterai: lampu hijau mengisi
+  { ry: 0.6, rx: 0.16, lid: 0, lift: 0, xray: 0, glow: 0 },       // desain: case tertutup rapat, sedikit miring
+  { ry: -0.35, rx: 0.3, lid: 1, lift: 1, xray: 1, glow: 0 },      // akustik: tutup terbuka, earbuds terangkat, case tembus pandang
+  { ry: 0.2, rx: 0.12, lid: 0, lift: 0, xray: 0, glow: 1 },       // baterai: tertutup, lampu hijau berdenyut
 ];
 
 let step = -1;
@@ -97,7 +99,7 @@ function tick() {
   if (sr.top > vh * 0.45) {
     // hero: objek besar di tengah, berputar pelan
     const spot = $('#hero-spot').getBoundingClientRect();
-    target = { ...place($('#hero-spot'), Math.min(innerWidth * (mobile ? 0.62 : 0.34), spot.height * 1.25, 520)), ry: 0.4, rx: 0.18, lid: 0, lift: 0, xray: 0, glow: 0, op: 1, spin: 1 };
+    target = { ...place($('#hero-spot'), Math.min(innerWidth * (mobile ? 0.5 : 0.25), spot.height * 0.8, 400)), ry: 0.4, rx: 0.2, lid: 1, lift: 0, xray: 0, glow: 0, op: 1, spin: 1 };
   } else if (sr.bottom > vh * 0.55) {
     const spot = $('#story-spot').getBoundingClientRect();
     const pose = STEP_POSE[i], at = place($('#story-spot'), Math.min(spot.width * 0.8, spot.height * (mobile ? 1.15 : 1.05), 460));
@@ -105,7 +107,7 @@ function tick() {
     target = { ...at, s: at.s * (1 - pose.lift * (mobile ? 0.3 : 0.12)), y: at.y - pose.lift * (mobile ? 0.05 : 0.02), ...pose, op: 1, spin: 0 };
   } else if (cr.bottom > vh * 0.45) {
     const spot = $('#colors-spot').getBoundingClientRect();
-    target = { ...place($('#colors-spot'), Math.min(spot.width * 0.78, (mobile ? 0.6 : 0.32) * innerWidth, 440)), ry: -0.45, rx: 0.16, lid: 0, lift: 0, xray: 0, glow: 0, op: 1, spin: 0 };
+    target = { ...place($('#colors-spot'), Math.min(spot.width * 0.78, (mobile ? 0.6 : 0.32) * innerWidth, 440)), ry: -0.45, rx: 0.2, lid: model === 'mini' ? 1 : 0.75, lift: 0, xray: 0, glow: 0, op: 1, spin: 0 };
   } else {
     target = { op: 0, spin: 0 };
   }
@@ -126,6 +128,21 @@ function setColor(c, from3D = true) {
   $('#hero-spot img').src = img(c);
   if (step === 0) $('#story-fallback').src = img(c);
   if (from3D && pods) pods.color(c.hex);
+}
+function setupModels() {
+  const box = $('#models');
+  box.addEventListener('click', async e => {
+    const b = e.target.closest('[data-model]');
+    if (!b || b.dataset.model === model) return;
+    model = b.dataset.model;
+    $$('[data-model]', box).forEach(x => x.setAttribute('aria-checked', String(x === b)));
+    $('#model-name').textContent = MODELS[model];
+    setColor(color, false);
+    if (pods) {
+      box.setAttribute('aria-busy', 'true');
+      try { await pods.model(model); } finally { box.removeAttribute('aria-busy'); }
+    }
+  });
 }
 function setupColors() {
   const box = $('#swatches');
@@ -200,11 +217,12 @@ function setupOrder() {
     const msg = $('#order-msg'), btn = $('#order-submit');
     $$('.field', form).forEach(f => f.classList.remove('bad'));
     const data = Object.fromEntries(new FormData(form));
+    if (model !== 'pods') data.note = `Model: ${MODELS[model]}.` + (data.note ? ' ' + data.note : '');
     btn.disabled = true; btn.textContent = 'Mengirim…'; msg.className = 'form-msg'; msg.textContent = '';
     try {
       const r = await api.order(data);
       $('#done-code').textContent = r.code;
-      $('#done-text').textContent = `Fabulous Pods ${r.product} × ${r.qty}, total ${rp(r.total)}. Simpan kode ini, lalu konfirmasi lewat WhatsApp supaya pesananmu cepat diproses.`;
+      $('#done-text').textContent = `${MODELS[model]} ${r.product} × ${r.qty}, total ${rp(r.total)}. Simpan kode ini, lalu konfirmasi lewat WhatsApp supaya pesananmu cepat diproses.`;
       $('#done-wa').href = r.whatsapp;
       form.hidden = true; $('#order-done').hidden = false;
       form.reset();
@@ -248,6 +266,7 @@ function setupChrome() {
 }
 
 setupChrome();
+setupModels();
 setupColors();
 setStep(0);
 layoutNodes();
