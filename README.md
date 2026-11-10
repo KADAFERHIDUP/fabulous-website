@@ -4,7 +4,7 @@ Website produk earbuds **Fabulous** dengan objek 3D yang mengikuti scroll, dibua
 
 | Folder | Isi |
 |---|---|
-| `frontend/` | Website: HTML, CSS, JavaScript, three.js. Bisa jalan sendiri (GitHub Pages / Live Server); pesanan lewat WhatsApp. |
+| `frontend/` | Website: HTML, CSS, JavaScript, three.js. Online di **https://fabulous.kadaferhidup.my.id** (GitHub Pages); tanpa backend, pesanan lewat WhatsApp. |
 | `backend/` | CodeIgniter 4 + MySQL: API produk dan pesanan, panel admin. Kalau aktif, website otomatis memakai database. |
 
 ## Dua mode
