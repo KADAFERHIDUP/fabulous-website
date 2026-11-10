@@ -204,6 +204,23 @@ export async function createPods(canvas, { color = '#344d52', model = 'pods' } =
   document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
 
   // gambar produk HD dari model: latar transparan, warna apa pun, tutup sedikit terbuka
+  // batas objek di layar (koordinat -1..1), dihitung dari titik-titik model
+  const _v = new THREE.Vector3();
+  function frame2D(obj) {
+    scene.updateMatrixWorld(true);
+    const f = { x0: Infinity, x1: -Infinity, y0: Infinity, y1: -Infinity };
+    obj.traverse(o => {
+      if (!o.isMesh || !o.visible || o.userData.wire) return;
+      const P = o.geometry.attributes.position, step = Math.max(1, Math.floor(P.count / 3000));
+      for (let i = 0; i < P.count; i += step) {
+        _v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld).project(camera);
+        if (_v.x < f.x0) f.x0 = _v.x; if (_v.x > f.x1) f.x1 = _v.x;
+        if (_v.y < f.y0) f.y0 = _v.y; if (_v.y > f.y1) f.y1 = _v.y;
+      }
+    });
+    return f;
+  }
+
   function still(hex, W = 640, H = 520) {
     // katalog selalu memakai model utama (Pods), apa pun model yang sedang tampil
     const shown = kit;
@@ -211,7 +228,17 @@ export async function createPods(canvas, { color = '#344d52', model = 'pods' } =
     renderer.setSize(W, H, false);
     camera.aspect = W / H; camera.updateProjectionMatrix();
     mats.leather.color.set(hex);
-    pose({ x: 0, y: -0.04, s: 0.74 * visW() / MODEL_SPAN, ry: 0.5, rx: 0.22, lid: 0.85, lift: 0, xray: 0, glow: 0, spin: 0 }, 0, false);
+    // ukur ulang supaya seluruh objek (tutup terbuka dan earbuds) masuk bingkai dengan sedikit ruang
+    const c = { x: 0, y: 0, s: 0.6 * visW() / MODEL_SPAN, ry: 0.5, rx: 0.22, lid: 0.85, lift: 0, xray: 0, glow: 0, spin: 0 };
+    for (let i = 0; i < 3; i++) {
+      pose(c, 0, false);
+      const f = frame2D(kit.group);
+      const k = Math.min(1.7 / (f.x1 - f.x0), 1.7 / (f.y1 - f.y0));
+      c.s *= k;
+      c.x = -k * ((f.x0 + f.x1) / 2 - 2 * c.x) / 2;
+      c.y = -k * ((f.y0 + f.y1) / 2 - 2 * c.y) / 2;
+    }
+    pose(c, 0, false);
     renderer.render(scene, camera);
     const url = canvas.toDataURL('image/png');
     resize();
