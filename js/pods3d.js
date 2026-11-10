@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from '../vendor/RoomEnvironment.js';
 
-const N = 3.3, A = 1.5, B = 1.1, SEAM = 0.42, D = 1.0, BEV = 0.15;
+const N = 3.3, A = 1.5, B = 1.1, SEAM = 0.42, D = 1.0, BEV = 0.15, MODEL_SPAN = 3.4;
 
 function arc(t0, t1, steps = 64) {
   const pts = [];
@@ -154,11 +154,14 @@ export function createPods(canvas, { color = '#344d52' } = {}) {
     col.lerp(colTarget, calm.matches ? 1 : 1 - Math.exp(-dt * 5)); leather.color.copy(col);
     canvas.style.opacity = cur.op.toFixed(3);
     if (cur.op < 0.01 || !visible) return;
-    const t = now / 1000;
-    const spin = calm.matches ? 0 : cur.spin * t * 0.35;
-    root.position.set(cur.x * visW(), cur.y * visH() + (calm.matches ? 0 : Math.sin(t * 1.2) * 0.06), 0);
+    pose(cur, now / 1000, true);
+    renderer.render(scene, camera);
+  }
+  function pose(cur, t, live) {
+    const spin = calm.matches || !live ? 0 : cur.spin * t * 0.35;
+    root.position.set(cur.x * visW(), cur.y * visH() + (calm.matches || !live ? 0 : Math.sin(t * 1.2) * 0.06), 0);
     root.scale.setScalar(cur.s);
-    pods.rotation.set(cur.rx + my * 0.12, cur.ry + spin + mx * 0.3, 0);
+    pods.rotation.set(cur.rx + (live ? my * 0.12 : 0), cur.ry + spin + (live ? mx * 0.3 : 0), 0);
     lidPivot.rotation.x = -cur.lid * 1.85;
     buds.forEach((b, i) => {
       const sgn = i ? 1 : -1;
@@ -176,12 +179,29 @@ export function createPods(canvas, { color = '#344d52' } = {}) {
     led.material.opacity = 0.25 + cur.glow * 0.75 * pulse;
     glow.material.opacity = cur.glow * (0.7 + 0.3 * pulse);
     shadow.material.opacity = 1 - cur.lift * 0.5;
-    renderer.render(scene, camera);
   }
   raf = requestAnimationFrame(frame);
   document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
 
+  // foto produk HD dari model 3D: latar transparan, warna apa pun, tanpa file foto
+  function still(hex, W = 640, H = 520) {
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H; camera.updateProjectionMatrix();
+    const s = 0.78 * visW() / MODEL_SPAN;
+    leather.color.set(hex);
+    pose({ x: 0, y: -0.07, s, ry: 0.42, rx: 0.2, lid: 0.62, lift: 0, xray: 0, glow: 0, spin: 0 }, 0, false);
+    led.material.opacity = 0.25; glow.material.opacity = 0;
+    renderer.render(scene, camera);
+    const url = canvas.toDataURL('image/png');
+    resize();
+    leather.color.copy(col);
+    pose(cur, performance.now() / 1000, true);
+    renderer.render(scene, camera);
+    return url;
+  }
+
   return {
+    still,
     set(next) { tgt = { ...tgt, ...next }; },
     jump(next) { tgt = { ...tgt, ...next }; Object.assign(cur, tgt); },
     color(hex) { colTarget.set(hex); },

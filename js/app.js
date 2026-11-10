@@ -27,6 +27,9 @@ async function start3D() {
     const { createPods } = await import('./pods3d.js');
     pods = createPods($('#stage'), { color: color.hex });
     document.body.classList.add('has-3d');
+    // ganti foto kecil di katalog dengan render HD dari model 3D (satu per warna, latar transparan)
+    const shots = () => $$('.item img').forEach((im, k) => { im.src = pods.still(COLORS[k].hex); im.classList.add('render'); });
+    setTimeout(shots, 600);
   } catch (e) {
     document.body.classList.add('no-3d');
     console.info('3D dimatikan:', e.message);
@@ -92,7 +95,7 @@ function tick() {
     target = { ...at, s: at.s * (1 - pose.lift * (mobile ? 0.3 : 0.12)), y: at.y - pose.lift * (mobile ? 0.05 : 0.02), ...pose, op: 1, spin: 0 };
   } else if (cr.bottom > vh * 0.45) {
     const spot = $('#colors-spot').getBoundingClientRect();
-    target = { ...place($('#colors-spot'), Math.min(spot.width * 0.85, (mobile ? 0.62 : 0.4) * innerWidth, 500)), ry: -0.45, rx: 0.16, lid: 0, lift: 0, xray: 0, glow: 0, op: 1, spin: 0 };
+    target = { ...place($('#colors-spot'), Math.min(spot.width * 0.78, (mobile ? 0.6 : 0.32) * innerWidth, 440)), ry: -0.45, rx: 0.16, lid: 0, lift: 0, xray: 0, glow: 0, op: 1, spin: 0 };
   } else {
     target = { op: 0, spin: 0 };
   }
