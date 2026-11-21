@@ -27,6 +27,7 @@
 
 # Foto mobil yang diupload lewat panel admin
 /public/uploads/*
+!/public/uploads/.htaccess
 !/public/uploads/.gitkeep
 
 .DS_Store
