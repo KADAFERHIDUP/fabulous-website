@@ -72,7 +72,7 @@ class Orders extends BaseController
         fwrite($out, "\xEF\xBB\xBF"); // supaya Excel membaca huruf dengan benar
         fputcsv($out, ['Kode', 'Tanggal', 'Warna', 'Jumlah', 'Harga satuan', 'Total', 'Nama', 'WhatsApp', 'Pengiriman', 'Alamat', 'Catatan', 'Status'], ';');
         foreach ($rows as $o) {
-            fputcsv($out, [$o['code'], $o['created_at'], $o['product_name'], $o['qty'], $o['unit_price'], $o['total'], $o['name'], $o['phone'], $o['delivery'], $o['address'], $o['note'], $o['status']], ';');
+            fputcsv($out, csv_safe([$o['code'], $o['created_at'], $o['product_name'], $o['qty'], $o['unit_price'], $o['total'], $o['name'], $o['phone'], $o['delivery'], $o['address'], $o['note'], $o['status']]), ';');
         }
         rewind($out);
 

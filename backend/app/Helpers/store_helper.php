@@ -42,3 +42,21 @@ if (! function_exists('waktu')) {
         return date('j', $t) . ' ' . $months[(int) date('n', $t)] . ' ' . date('Y, H.i', $t);
     }
 }
+
+if (! function_exists('csv_safe')) {
+    /**
+     * Isi sel CSV yang diawali = + - @ tab atau enter dianggap rumus oleh Excel/Sheets.
+     * Pembeli bisa mengisi nama seperti =HYPERLINK(...) supaya admin yang membuka file ikut terjebak,
+     * jadi sel teks seperti itu diberi tanda petik di depan. Angka biasa (termasuk negatif) dibiarkan.
+     */
+    function csv_safe(array $row): array
+    {
+        return array_map(static function ($v) {
+            if (! is_string($v) || $v === '' || is_numeric($v)) {
+                return $v;
+            }
+
+            return in_array($v[0], ['=', '+', '-', '@', "\t", "\r"], true) ? "'" . $v : $v;
+        }, $row);
+    }
+}
